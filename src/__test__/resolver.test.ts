@@ -151,9 +151,13 @@ describe("resolver", () => {
   });
 
   describe("buildDefaultTokenRecords", () => {
-    it("creates records for all 32 token groups", () => {
+    it("creates one record per token group", () => {
+      // Derived from the registry rather than restated. The claim is "one
+      // record per group", and a literal here was a second place the count had
+      // to be edited when a token was added — which is how three tests failed
+      // for one addition.
       const records = buildDefaultTokenRecords("my-theme-id");
-      expect(records.length).toBe(32);
+      expect(records.length).toBe(COMPONENT_TOKEN_GROUPS.length);
     });
 
     it("sets themeId on all records", () => {

@@ -1,4 +1,8 @@
-import { colorTokenNames, requiredCssCustomProperties } from "stonedog-style/contract";
+import {
+  colorTokenNames,
+  defaultedColorTokenNames,
+  requiredCssCustomProperties,
+} from "stonedog-style/contract";
 
 import {
   FONT_ROLES,
@@ -93,7 +97,17 @@ describe("the stonedog-style token contract", () => {
     // stonedog-style has to finish.
     const required = requiredCssCustomProperties();
 
-    expect(required).toHaveLength(colorTokenNames().length);
+    // `required === every colour token` no longer holds, and that moved on
+    // purpose in stonedog-style 0.11.0: the emphasis tiers and the status chips
+    // are colour tokens that carry a DEFAULT, so requiring them of a host would
+    // fail every existing one for no safety gain — the same argument that keeps
+    // the font properties out, one line below.
+    //
+    // Stated as the equation rather than a number so it keeps meaning something
+    // as tokens are added on either side.
+    expect(required).toHaveLength(
+      colorTokenNames().length - defaultedColorTokenNames().length,
+    );
     for (const property of [
       // Wrapped, not point-free: the prefix argument (NEH-423) sits where
       // `map` puts the index, and the compiler rejects the bare form.
