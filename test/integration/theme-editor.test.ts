@@ -80,6 +80,7 @@ function buildThemeTokens(
     { themeId, name: "textPop", bgLight: "transparent", bgDark: "transparent", textLight: p.accentText, textDark: p.accentText, borderLight: "transparent", borderDark: "transparent", sortOrder: 50 },
     { themeId, name: "textError", bgLight: "transparent", bgDark: "transparent", textLight: "#dc3545", textDark: "#ff6b6b", borderLight: "transparent", borderDark: "transparent", sortOrder: 51 },
     { themeId, name: "textWarning", bgLight: "transparent", bgDark: "transparent", textLight: "#ffc107", textDark: "#ffdd57", borderLight: "transparent", borderDark: "transparent", sortOrder: 52 },
+    { themeId, name: "textSuccess", bgLight: "transparent", bgDark: "transparent", textLight: "#166534", textDark: "#4ade80", borderLight: "transparent", borderDark: "transparent", sortOrder: 53 },
     // Title
     { themeId, name: "titlePrimary", bgLight: "transparent", bgDark: "transparent", textLight: p.primaryText, textDark: p.primaryText, borderLight: "transparent", borderDark: "transparent", sortOrder: 55 },
     { themeId, name: "titleSecondary", bgLight: "transparent", bgDark: "transparent", textLight: p.secondaryText, textDark: p.secondaryText, borderLight: "transparent", borderDark: "transparent", sortOrder: 56 },

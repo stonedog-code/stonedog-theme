@@ -96,9 +96,9 @@ function checkAAACompliance(
 
 describe("Theme Management Integration", () => {
   describe("Creating new themes", () => {
-    it("buildDefaultTokenRecords creates a complete set for all 32 groups", () => {
+    it("buildDefaultTokenRecords creates a complete set, one per group", () => {
       const tokens = buildDefaultTokenRecords("new-theme-123");
-      expect(tokens.length).toBe(32);
+      expect(tokens.length).toBe(COMPONENT_TOKEN_GROUPS.length);
 
       const tokenNames = tokens.map((t) => t.name);
       const groupKeys = COMPONENT_TOKEN_GROUPS.map((g) => g.key);

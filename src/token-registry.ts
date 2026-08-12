@@ -398,6 +398,32 @@ export const COMPONENT_TOKEN_GROUPS: ComponentTokenGroup[] = [
     defaultPaletteRef: { text: { palette: "accent", shade: "subtle" } },
     sortOrder: 52,
   },
+  // Success, added to match `@stonedogcode/style` 0.11.0+.
+  //
+  // Style's contract gained `textSuccess` as a REQUIRED, fallback-free colour:
+  // it could express failure and caution but not success, so every consumer
+  // that needed one improvised. A theme could not legally declare it while this
+  // registry rejected the key as unknown, which is the ordering this entry
+  // fixes — style requires the property, and a theme is what supplies it.
+  //
+  // `defaultPaletteRef` mirrors `textWarning`'s. Neither that nor `textError`'s
+  // is semantically a warning or an error colour; they are seeds for
+  // auto-deriving a theme from a palette, and a theme author states a real
+  // value. There is no success palette to point at, and inventing one would be
+  // a design decision this entry has no business making.
+  //
+  // Deliberately NOT added to `recipe-contrast-map.ts`: style's `text` recipe
+  // has `warning` and `error` variants and no `success` one, so a contrast pair
+  // there would name a variant that does not exist.
+  {
+    key: "textSuccess",
+    displayName: "Text Success",
+    category: "text",
+    activeSlots: ["text"],
+    legacyVariables: { text: "textSuccess" },
+    defaultPaletteRef: { text: { palette: "accent", shade: "subtle" } },
+    sortOrder: 53,
+  },
 
   // === Title (Logo) ===
   {

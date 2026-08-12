@@ -61,6 +61,7 @@ function buildRealisticTheme(themeId: string): ComponentTokenRecord[] {
     { themeId, name: "textPop", bgLight: "transparent", bgDark: "transparent", textLight: "#a5d6a7", textDark: "#66bb6a", borderLight: "transparent", borderDark: "transparent", sortOrder: 50 },
     { themeId, name: "textError", bgLight: "transparent", bgDark: "transparent", textLight: "#66bb6a", textDark: "#a5d6a7", borderLight: "transparent", borderDark: "transparent", sortOrder: 51 },
     { themeId, name: "textWarning", bgLight: "transparent", bgDark: "transparent", textLight: "#a5d6a7", textDark: "#66bb6a", borderLight: "transparent", borderDark: "transparent", sortOrder: 52 },
+    { themeId, name: "textSuccess", bgLight: "transparent", bgDark: "transparent", textLight: "#2e7d32", textDark: "#81c784", borderLight: "transparent", borderDark: "transparent", sortOrder: 53 },
 
     // Title tokens
     { themeId, name: "titlePrimary", bgLight: "transparent", bgDark: "transparent", textLight: "#1565c0", textDark: "#2196f3", borderLight: "transparent", borderDark: "transparent", sortOrder: 55 },

@@ -110,8 +110,12 @@ describe("token-registry", () => {
   });
 
   describe("COMPONENT_TOKEN_GROUPS", () => {
-    it("contains 32 token groups", () => {
-      expect(COMPONENT_TOKEN_GROUPS.length).toBe(32);
+    it("contains 33 token groups", () => {
+      // A canary, not a fact worth knowing. The literal is here so that adding
+      // or removing a token is a DELIBERATE act with a diff line, rather than
+      // something that happens to a host's theme editor unannounced. Moving it
+      // is part of adding a token; 32 -> 33 was `textSuccess`.
+      expect(COMPONENT_TOKEN_GROUPS.length).toBe(33);
     });
 
     it("all groups have required fields", () => {
