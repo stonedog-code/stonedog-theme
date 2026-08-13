@@ -1,6 +1,6 @@
 {
   "name": "@stonedogcode/theme",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The theme layer for stonedog-style: component tokens, light/dark resolution, WCAG contrast validation, and the CSS custom properties a host must define.",
   "license": "Apache-2.0",
   "author": "StoneDogCode L.L.C.",
