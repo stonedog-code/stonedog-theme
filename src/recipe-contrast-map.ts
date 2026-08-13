@@ -62,6 +62,18 @@ export const RECIPE_CONTRAST_PAIRS: RecipeContrastPair[] = [
   { recipe: "text", variant: "pop", fgToken: "textPop", bgToken: "boxBgMain" },
   { recipe: "text", variant: "warning", fgToken: "textWarning", bgToken: "boxBgMain" },
   { recipe: "text", variant: "error", fgToken: "textError", bgToken: "boxBgMain" },
+  // `text` has no `success` variant in stonedog-style, and that is not what
+  // this row is for. `recipe`/`variant` feed only the diagnostic string; the
+  // row's job is to name the SURFACE a text-only token is read on — and for a
+  // group with `activeSlots: ["text"]` it is the only thing that can, because
+  // there is no `bg` slot for the resolver's own pairing walk to compare
+  // against. Omitted, the token still gets a palette fallback; it just never
+  // gets checked.
+  //
+  // hopper-theme shipped exactly that. `textSuccess` resolved to `#FECDD3` on a
+  // `#f5f5f5` surface — 1.29:1 — while its three siblings sat at 19.26:1
+  // (NEH-631). Same registry shape here, so the same row.
+  { recipe: "text", variant: "success", fgToken: "textSuccess", bgToken: "boxBgMain" },
 
   // === InputText ===
   { recipe: "inputText", variant: "solid", fgToken: "textPrimary", bgToken: "boxBgAccent" },
