@@ -116,11 +116,32 @@ Since landed as well:
    would change the `requiredCssCustomProperties().length ===
    colorTokenNames().length` identity that both repos pin.
 
-Note `buildDefaultTokenRecords()` returns 32 records whose every slot is
+Note `buildDefaultTokenRecords()` returns one record per registry group (36 as
+of NEH-609; the number was written as 32 here while it was already 33, so read
+`COMPONENT_TOKEN_GROUPS.length` rather than this sentence) whose every slot is
 `"transparent"`, and `resolveTokensToCssVars` on them yields **zero**
 properties. That is correct — placeholders are not a theme — but it means a
 naive "does it produce the 44?" check passes vacuously against defaults. Any
 completeness test has to run against a *populated* theme.
+
+**Three groups carry no `defaultPaletteRef`, and that is deliberate**
+(NEH-609). `boxSuccess` / `boxWarning` / `boxError` are the only ones, because
+they are the only tokens `stonedog-style` already ships good defaults for —
+hue-fixed, lightness-relative, correct on light and dark without a host saying
+anything. A `defaultPaletteRef` seeds auto-derivation, and the only palette
+available to point at is `accent`, which would derive all three status chips
+from one colour and destroy the distinction they exist to draw. Registering
+them makes a host able to **declare** them (the actual defect: `validateJsonTheme`
+rejected `boxSuccess` as `unknown token`, so style's documented override route
+was unreachable through the theme layer); omitting the ref keeps a silent theme
+falling through to style's defaults. Deriving these honestly needs a status ramp
+in the palette model — a much larger change, deliberately not bundled.
+
+Also note **nothing in this package reads `defaultPaletteRef`.** It is registry
+metadata that *consumers* walk (hopper-web pairs it with its own
+`DEFAULT_SEMANTIC_REFS` in `lib/theme/paletteFallbacks.ts`, which is where the
+derivation actually lives). Do not assume changing it here changes any rendered
+colour.
 
 ## Things that will bite
 

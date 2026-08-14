@@ -110,12 +110,13 @@ describe("token-registry", () => {
   });
 
   describe("COMPONENT_TOKEN_GROUPS", () => {
-    it("contains 33 token groups", () => {
+    it("contains 36 token groups", () => {
       // A canary, not a fact worth knowing. The literal is here so that adding
       // or removing a token is a DELIBERATE act with a diff line, rather than
       // something that happens to a host's theme editor unannounced. Moving it
-      // is part of adding a token; 32 -> 33 was `textSuccess`.
-      expect(COMPONENT_TOKEN_GROUPS.length).toBe(33);
+      // is part of adding a token; 32 -> 33 was `textSuccess`, and 33 -> 36 was
+      // the three status surfaces (NEH-609).
+      expect(COMPONENT_TOKEN_GROUPS.length).toBe(36);
     });
 
     it("all groups have required fields", () => {
@@ -145,10 +146,55 @@ describe("token-registry", () => {
       expect(categories).toEqual(new Set(["box", "button", "arrow", "icon", "shadow", "text", "title", "special"]));
     });
 
-    it("every active slot has a legacy variable mapping", () => {
+    it("maps either EVERY active slot to a legacy variable, or none of them", () => {
+      // This was "every active slot has a legacy variable mapping" until the
+      // status surfaces arrived (NEH-609). Narrowed, and deliberately narrowed
+      // in the direction that keeps it strict where it was doing work.
+      //
+      // What the rule is actually for: a token carried over from hopper-web's
+      // semantic-variable layer must not lose a slot on the way. A group that
+      // maps `bg` and `text` but forgets `border` emits one fewer `--colors-*`
+      // alias than the pre-token CSS reads, and that CSS then paints nothing —
+      // silently, which is this package's whole failure mode. A PARTIAL map is
+      // the bug, and this still catches it.
+      //
+      // What the blanket version could not express: `boxSuccess`, `boxWarning`
+      // and `boxError` postdate that layer entirely. There is no pre-token CSS
+      // reading a legacy alias for them, so there is no name to carry over.
+      // Satisfying the old rule would have meant INVENTING three legacy names
+      // and emitting `--colors-*` aliases that nothing anywhere reads — passing
+      // the test by adding dead output, which is worse than the gap it closed.
+      //
+      // Hence all-or-nothing: a migrated token maps everything, a new token
+      // maps nothing, and the half-migrated state the rule exists to catch is
+      // still an error.
       for (const group of COMPONENT_TOKEN_GROUPS) {
+        const mapped = group.activeSlots.filter((slot) => group.legacyVariables[slot]);
+        const isAllOrNothing =
+          mapped.length === group.activeSlots.length || mapped.length === 0;
+
+        expect({
+          group: group.key,
+          activeSlots: group.activeSlots,
+          mappedSlots: mapped,
+          allOrNothing: isAllOrNothing,
+        }).toMatchObject({ allOrNothing: true });
+      }
+    });
+
+    it("still requires a legacy mapping for every token that predates the token layer", () => {
+      // The half of the old blanket rule worth keeping as an explicit list: if
+      // one of these ever loses its legacy names, hopper-web's pre-token CSS
+      // stops being painted and nothing errors. The all-or-nothing rule above
+      // would happily accept `legacyVariables: {}` here.
+      const postLegacy = new Set(["boxSuccess", "boxWarning", "boxError"]);
+
+      for (const group of COMPONENT_TOKEN_GROUPS) {
+        if (postLegacy.has(group.key)) continue;
         for (const slot of group.activeSlots) {
-          expect(group.legacyVariables[slot]).toBeTruthy();
+          expect({ group: group.key, slot, legacy: group.legacyVariables[slot] }).toMatchObject(
+            { legacy: expect.any(String) },
+          );
         }
       }
     });

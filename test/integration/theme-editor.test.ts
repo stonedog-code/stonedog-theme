@@ -89,6 +89,15 @@ function buildThemeTokens(
     { themeId, name: "boxSearchProviders", bgLight: p.accentBg, bgDark: p.accentBg, textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 60 },
     { themeId, name: "boxAIProviders", bgLight: p.secondaryBg, bgDark: p.secondaryBg, textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 61 },
     { themeId, name: "boxInfo", bgLight: p.primaryBg, bgDark: p.primaryBg, textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 62 },
+
+    // Status surfaces (NEH-609), left UNSET on purpose. These three carry good
+    // hue-fixed defaults in `@stonedogcode/style`, so the ordinary case is a
+    // theme that says nothing about them and falls through — which is what this
+    // fixture should look like. The populated case is covered end-to-end in
+    // json-theme.test.ts.
+    { themeId, name: "boxSuccess", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 63 },
+    { themeId, name: "boxWarning", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 64 },
+    { themeId, name: "boxError", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 65 },
   ];
 }
 
