@@ -72,6 +72,17 @@ function buildRealisticTheme(themeId: string): ComponentTokenRecord[] {
     { themeId, name: "boxSearchProviders", bgLight: "#43a047", bgDark: "#1b5e20", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 60 },
     { themeId, name: "boxAIProviders", bgLight: "#43a047", bgDark: "#1b5e20", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 61 },
     { themeId, name: "boxInfo", bgLight: "#1565c0", bgDark: "#0d47a1", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 62 },
+
+    // Status surfaces (NEH-609). Success is populated so the bg/border PAIR is
+    // exercised through the consumption payload — it is the only group here
+    // whose border slot is meaningful, and a border that resolves while its bg
+    // does not is exactly the asymmetry worth catching. Warning and error stay
+    // unset, which is the ordinary case: style ships defaults for all six, so a
+    // silent theme must keep falling through to them rather than being derived
+    // a colour.
+    { themeId, name: "boxSuccess", bgLight: "#e6f4ea", bgDark: "#12291a", textLight: "transparent", textDark: "transparent", borderLight: "#137333", borderDark: "#5bb974", sortOrder: 63 },
+    { themeId, name: "boxWarning", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 64 },
+    { themeId, name: "boxError", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 65 },
   ];
 }
 

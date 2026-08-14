@@ -482,6 +482,78 @@ export const COMPONENT_TOKEN_GROUPS: ComponentTokenGroup[] = [
     defaultPaletteRef: { bg: { palette: "primary", shade: "solid" } },
     sortOrder: 62,
   },
+
+  // === Status surfaces (NEH-609) ===
+  //
+  // The chips `StyledAlert` paints, added to match `@stonedogcode/style` 0.12.0+.
+  // One group per status, each carrying BOTH slots, because the six properties
+  // style reads are three bg/border pairs:
+  //
+  //   boxSuccess    -> --<prefix>-box-success-bg   + --<prefix>-box-success-border
+  //   boxWarning    -> --<prefix>-box-warning-bg   + --<prefix>-box-warning-border
+  //   boxError      -> --<prefix>-box-error-bg     + --<prefix>-box-error-border
+  //
+  // Style names the border halves `borderSuccess`/`borderWarning`/`borderError`
+  // as Panda tokens; that is style's flat token namespace, not a fourth, fifth
+  // and sixth group here. The property name is what the two packages agree on.
+  //
+  // WHY THESE HAVE NO `defaultPaletteRef`, ALONE IN THIS REGISTRY
+  //
+  // Every other group has one, so its absence here is a statement and not an
+  // oversight. Unlike every other token, these six already have GOOD defaults —
+  // style ships them fallback-carrying, hue-fixed and lightness-relative, so an
+  // alert renders correctly in a host that says nothing at all. That is the
+  // whole reason this issue was Low rather than a blocker.
+  //
+  // A `defaultPaletteRef` exists to seed auto-derivation of a theme from a
+  // palette. Pointing these at `accent` — the shrug `textError`/`textWarning`
+  // take — would derive all three status chips from ONE colour, so a derived
+  // theme would replace three deliberately distinct hues with three
+  // near-identical ones and LOSE the distinction the tokens exist to draw. That
+  // is strictly worse than deriving nothing, because style's defaults are
+  // already right.
+  //
+  // So: registering them makes a host able to DECLARE them (which is the defect
+  // — `validateJsonTheme` rejects an unregistered key as `unknown token`, which
+  // made style's documented "define these to use your own" contract unreachable
+  // through the theme layer). Omitting the ref leaves them underived, so a
+  // theme that says nothing keeps style's good defaults rather than being given
+  // worse ones. The two halves are independent and this takes the good one from
+  // each.
+  //
+  // The honest way to derive these is a status ramp in the palette model, so
+  // derivation has something real to draw from. That is a much larger change
+  // and it is deliberately NOT bundled here — nothing in this package reads
+  // `defaultPaletteRef` today anyway (it is registry metadata that only
+  // consumers walk), so adding a bad one now would buy nothing and cost the
+  // distinction later.
+  {
+    key: "boxSuccess",
+    displayName: "Success Box",
+    category: "special",
+    activeSlots: ["bg", "border"],
+    // No legacy names: these tokens postdate the hopper-web semantic-variable
+    // layer entirely, so there is no pre-token CSS for `emitLegacyAliases` to
+    // keep working.
+    legacyVariables: {},
+    sortOrder: 63,
+  },
+  {
+    key: "boxWarning",
+    displayName: "Warning Box",
+    category: "special",
+    activeSlots: ["bg", "border"],
+    legacyVariables: {},
+    sortOrder: 64,
+  },
+  {
+    key: "boxError",
+    displayName: "Error Box",
+    category: "special",
+    activeSlots: ["bg", "border"],
+    legacyVariables: {},
+    sortOrder: 65,
+  },
 ];
 
 /**
