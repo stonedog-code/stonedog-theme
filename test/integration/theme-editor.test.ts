@@ -82,6 +82,13 @@ function buildThemeTokens(
     { themeId, name: "textWarning", bgLight: "transparent", bgDark: "transparent", textLight: "#ffc107", textDark: "#ffdd57", borderLight: "transparent", borderDark: "transparent", sortOrder: 52 },
     { themeId, name: "textSuccess", bgLight: "transparent", bgDark: "transparent", textLight: "#166534", textDark: "#4ade80", borderLight: "transparent", borderDark: "transparent", sortOrder: 53 },
     // Title
+    //
+    // The plate (NEH-836) is left UNSET, like the status surfaces below and for
+    // the same reason: hopper-web seeds a mode-appropriate ground when no theme
+    // names one, so a theme that says nothing about its plate is the ordinary
+    // case and is what this fixture should look like. The populated case is
+    // covered end-to-end in theme-consumption.test.ts.
+    { themeId, name: "logoPlate", bgLight: "transparent", bgDark: "transparent", textLight: "transparent", textDark: "transparent", borderLight: "transparent", borderDark: "transparent", sortOrder: 54 },
     { themeId, name: "titlePrimary", bgLight: "transparent", bgDark: "transparent", textLight: p.primaryText, textDark: p.primaryText, borderLight: "transparent", borderDark: "transparent", sortOrder: 55 },
     { themeId, name: "titleSecondary", bgLight: "transparent", bgDark: "transparent", textLight: p.secondaryText, textDark: p.secondaryText, borderLight: "transparent", borderDark: "transparent", sortOrder: 56 },
     { themeId, name: "titleAccent", bgLight: "transparent", bgDark: "transparent", textLight: p.accentText, textDark: p.accentText, borderLight: "transparent", borderDark: "transparent", sortOrder: 57 },

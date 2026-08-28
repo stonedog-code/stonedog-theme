@@ -110,13 +110,14 @@ describe("token-registry", () => {
   });
 
   describe("COMPONENT_TOKEN_GROUPS", () => {
-    it("contains 36 token groups", () => {
+    it("contains 37 token groups", () => {
       // A canary, not a fact worth knowing. The literal is here so that adding
       // or removing a token is a DELIBERATE act with a diff line, rather than
       // something that happens to a host's theme editor unannounced. Moving it
-      // is part of adding a token; 32 -> 33 was `textSuccess`, and 33 -> 36 was
-      // the three status surfaces (NEH-609).
-      expect(COMPONENT_TOKEN_GROUPS.length).toBe(36);
+      // is part of adding a token; 32 -> 33 was `textSuccess`, 33 -> 36 was
+      // the three status surfaces (NEH-609), and 36 -> 37 was `logoPlate`
+      // (NEH-836).
+      expect(COMPONENT_TOKEN_GROUPS.length).toBe(37);
     });
 
     it("all groups have required fields", () => {
@@ -187,7 +188,7 @@ describe("token-registry", () => {
       // one of these ever loses its legacy names, hopper-web's pre-token CSS
       // stops being painted and nothing errors. The all-or-nothing rule above
       // would happily accept `legacyVariables: {}` here.
-      const postLegacy = new Set(["boxSuccess", "boxWarning", "boxError"]);
+      const postLegacy = new Set(["boxSuccess", "boxWarning", "boxError", "logoPlate"]);
 
       for (const group of COMPONENT_TOKEN_GROUPS) {
         if (postLegacy.has(group.key)) continue;
@@ -197,6 +198,51 @@ describe("token-registry", () => {
           );
         }
       }
+    });
+  });
+
+  describe("logoPlate (NEH-836)", () => {
+    // The wordmark plate is the one token whose VALUE lives entirely in the
+    // host and whose NAME lives entirely here, so the name is what this
+    // package owes. hopper-web reads two literal properties; if either name
+    // moves, nothing errors — the editor writes a row, the resolver emits a
+    // property, and the app reads a different one that is never defined. The
+    // plate then paints its `var()` fallback forever and a host concludes that
+    // theming the plate does not work.
+    const group = COMPONENT_TOKEN_GROUPS.find((g) => g.key === "logoPlate");
+
+    it("is registered, so the editor enumerates it and the save route accepts it", () => {
+      expect(group).toBeDefined();
+    });
+
+    it("emits exactly the two properties hopper-web reads", () => {
+      expect(getCssVarName("logoPlate", "bg")).toBe("--hopper-logo-plate-bg");
+      expect(getCssVarName("logoPlate", "border")).toBe("--hopper-logo-plate-border");
+      expect(group!.activeSlots).toEqual(["bg", "border"]);
+    });
+
+    it("sits with the wordmark colours it grounds, and sorts before them", () => {
+      expect(group!.category).toBe("title");
+      for (const key of ["titlePrimary", "titleSecondary", "titleAccent"]) {
+        const title = COMPONENT_TOKEN_GROUPS.find((g) => g.key === key);
+        expect(title!.category).toBe("title");
+        expect(group!.sortOrder).toBeLessThan(title!.sortOrder);
+      }
+    });
+
+    it("declares NO palette fallback, so it paints only when a theme states one", () => {
+      // A `defaultPaletteRef` would have a consumer derive a plate from the
+      // brand palette ahead of its own mode-appropriate seed, quietly replacing
+      // the known white / `#222` grounds that the wordmark's AA floor is
+      // computed against. Absence is the behaviour, not an omission.
+      expect(group!.defaultPaletteRef).toBeUndefined();
+    });
+
+    it("paints no text, so the wordmark exemption still covers exactly three keys", () => {
+      // `meaning-tokens-are-floored.test.ts` exempts the `title` category from
+      // the text contrast floor. Adding a fourth `title` group would widen that
+      // exemption by accident if it carried a text slot; it carries none.
+      expect(group!.activeSlots).not.toContain("text");
     });
   });
 
