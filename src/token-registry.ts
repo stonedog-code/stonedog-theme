@@ -150,7 +150,11 @@ export function getFontWeightCssVarName(
 }
 
 /**
- * All ~28 component token groups with their metadata and legacy variable mappings.
+ * Every component token group, with its metadata and legacy variable mappings.
+ *
+ * The count lives in `token-registry.test.ts` as a canary rather than here,
+ * where a stale number is invisible — this comment said "~28" while the list
+ * held 36.
  */
 export const COMPONENT_TOKEN_GROUPS: ComponentTokenGroup[] = [
   // === Box ===
@@ -426,6 +430,44 @@ export const COMPONENT_TOKEN_GROUPS: ComponentTokenGroup[] = [
   },
 
   // === Title (Logo) ===
+  //
+  // The plate comes FIRST, before the three colours it grounds, because in the
+  // editor a wordmark colour cannot be judged without knowing what it sits on.
+  // NEH-836 gave the mark an oval and floored `titlePrimary`/`titleSecondary`/
+  // `titleAccent` to AA against it for the first time; a host that changes the
+  // plate is changing what those three are measured against, so seeing them
+  // together is the point.
+  //
+  // ## Why this entry is the whole feature
+  //
+  // hopper-web already honours `--hopper-logo-plate-bg` and
+  // `--hopper-logo-plate-border` — its Panda tokens read them, and its serve
+  // path seeds a mode-appropriate default when nothing sets them. What did not
+  // exist was any way to SET them: the theme editor enumerates this registry,
+  // and `PUT /api/themes/[themeId]/tokens` rejects any name not in it. So the
+  // property was honoured and unsettable, which reads as "theming the plate
+  // does not work" rather than as a missing row.
+  //
+  // ## No `defaultPaletteRef`, deliberately
+  //
+  // A palette reference here would make a consumer's fallback resolver derive a
+  // plate colour from the brand palette, which would land BEFORE the host's own
+  // seed and silently replace the white/`#222` grounds the wordmark's contrast
+  // floor is written against. Absent, the token paints only when a theme
+  // actually states a value — the behaviour the plate had before this entry,
+  // now reachable from the UI. `boxSuccess` and its siblings are shaped the
+  // same way for the same reason.
+  {
+    key: "logoPlate",
+    displayName: "Logo Plate",
+    category: "title",
+    activeSlots: ["bg", "border"],
+    // No legacy names: the plate postdates the hopper-web semantic-variable
+    // layer entirely, so there is no pre-token CSS for `emitLegacyAliases` to
+    // keep working. Same reasoning as the status surfaces below.
+    legacyVariables: {},
+    sortOrder: 54,
+  },
   {
     key: "titlePrimary",
     displayName: "Title Primary",

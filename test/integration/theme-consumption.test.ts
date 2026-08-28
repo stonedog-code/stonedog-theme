@@ -64,6 +64,14 @@ function buildRealisticTheme(themeId: string): ComponentTokenRecord[] {
     { themeId, name: "textSuccess", bgLight: "transparent", bgDark: "transparent", textLight: "#2e7d32", textDark: "#81c784", borderLight: "transparent", borderDark: "transparent", sortOrder: 53 },
 
     // Title tokens
+    //
+    // The plate (NEH-836) is POPULATED here on purpose, unlike in
+    // theme-editor.test.ts. It is the only fixture in this package that carries
+    // a theme's plate through the resolver, so it is what proves the two
+    // properties hopper-web reads are actually emitted — a registry entry whose
+    // name never reaches a stylesheet is exactly the silent failure this
+    // package exists to prevent.
+    { themeId, name: "logoPlate", bgLight: "#ffffff", bgDark: "#222222", textLight: "transparent", textDark: "transparent", borderLight: "#e2e8f0", borderDark: "#3a3a3a", sortOrder: 54 },
     { themeId, name: "titlePrimary", bgLight: "transparent", bgDark: "transparent", textLight: "#1565c0", textDark: "#2196f3", borderLight: "transparent", borderDark: "transparent", sortOrder: 55 },
     { themeId, name: "titleSecondary", bgLight: "transparent", bgDark: "transparent", textLight: "#c2185b", textDark: "#e91e63", borderLight: "transparent", borderDark: "transparent", sortOrder: 56 },
     { themeId, name: "titleAccent", bgLight: "transparent", bgDark: "transparent", textLight: "#1b5e20", textDark: "#388e3c", borderLight: "transparent", borderDark: "transparent", sortOrder: 57 },
@@ -191,6 +199,24 @@ describe("Theme Consumption Integration", () => {
           }
         }
       }
+    });
+
+    it("emits the wordmark plate's two properties by name (NEH-836)", () => {
+      // Named rather than left to the generic loop above, because these two
+      // are a CONTRACT with a specific consumer: hopper-web's Panda tokens read
+      // `var(--hopper-logo-plate-bg, …)` and `var(--hopper-logo-plate-border,
+      // …)` as literals. If a rename ever moved them, the generic loop would
+      // keep passing — it derives the name it checks from the registry, so both
+      // halves would move together and agree with each other while agreeing
+      // with nothing in the app. The plate would then paint its `var()`
+      // fallback forever, in both modes, with no error anywhere.
+      const light = buildPayload(tokens, "light");
+      const dark = buildPayload(tokens, "dark");
+
+      expect(light.cssVariables["--hopper-logo-plate-bg"]).toBe("#ffffff");
+      expect(light.cssVariables["--hopper-logo-plate-border"]).toBe("#e2e8f0");
+      expect(dark.cssVariables["--hopper-logo-plate-bg"]).toBe("#222222");
+      expect(dark.cssVariables["--hopper-logo-plate-border"]).toBe("#3a3a3a");
     });
 
     it("cssVariables count equals number of non-transparent slots", () => {
