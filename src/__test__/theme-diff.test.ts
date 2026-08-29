@@ -1,6 +1,8 @@
 /** @jest-environment node */
 
 import { diffResolvedThemes, themesResolveIdentically } from "../theme-diff";
+import { adjustForContrast } from "../contrast";
+import { AA_NORMAL_TEXT_RATIO } from "../resolver";
 import { populatedTheme } from "../../test/fixtures/populated-theme";
 import type { ComponentTokenRecord } from "../types";
 
@@ -77,12 +79,27 @@ describe("diffResolvedThemes", () => {
   });
 
   it("compares what paints, not what is stored", () => {
-    // The resolver holds text/background pairs to the AA floor, so two
-    // different STORED text colours over the same background can resolve to the
-    // same EMITTED colour. A record-level diff would call this a change and
-    // make every push look dirty; nothing on screen moves.
-    const before = withToken("boxMain", { bgLight: "#888888", textLight: "#8a8a8a" });
-    const after = withToken("boxMain", { bgLight: "#888888", textLight: "#8c8c8c" });
+    // The resolver holds text/background pairs to the AA floor, so a STORED
+    // text colour and the one that PAINTS can differ. Storing the floor's own
+    // answer therefore changes the record without moving a single pixel, and a
+    // record-level diff would call that a change and make every push look
+    // dirty.
+    //
+    // This used to be written as two arbitrary near-identical greys (`#8a8a8a`
+    // and `#8c8c8c`) that "both resolve the same". They only did so because the
+    // wrong-direction search collapsed BOTH to `#ffffff` (NEH-898) — the test
+    // was resting on the defect, not on the resolver. Deriving the second value
+    // from the floor itself is the invariant it meant to assert, and it cannot
+    // rot the same way.
+    const bg = "#888888";
+    const stored = "#8a8a8a";
+    const painted = adjustForContrast(stored, bg, AA_NORMAL_TEXT_RATIO);
+    // Non-vacuity: if the floor stopped adjusting, the two themes below would
+    // be identical and this test would pass while proving nothing.
+    expect(painted).not.toBe(stored);
+
+    const before = withToken("boxMain", { bgLight: bg, textLight: stored });
+    const after = withToken("boxMain", { bgLight: bg, textLight: painted });
 
     const textDifferences = diffResolvedThemes({ tokens: before }, { tokens: after }).filter(
       (d) => d.property === "--hopper-box-main-text",

@@ -14,6 +14,8 @@
 import {
   resolveTokensToCssVars,
   COMPONENT_TOKEN_GROUPS,
+  getContrastRatio,
+  AA_NORMAL_TEXT_RATIO,
 } from "../../src";
 import type { ComponentTokenRecord } from "../../src";
 
@@ -292,10 +294,38 @@ describe("ThemeEditor Data Flow Integration", () => {
         const tokens = buildThemeTokens(fixture.themeId, fixture.colors);
         const cssVars = resolveTokensToCssVars(tokens, "light");
 
+        // Backgrounds pass through untouched — the resolver never repaints a
+        // surface, only the text that sits on it.
         expect(cssVars["--hopper-box-primary-bg"]).toBe(fixture.colors.primaryBg);
-        expect(cssVars["--hopper-box-primary-text"]).toBe(fixture.colors.primaryText);
         expect(cssVars["--hopper-box-secondary-bg"]).toBe(fixture.colors.secondaryBg);
         expect(cssVars["--hopper-box-accent-bg"]).toBe(fixture.colors.accentBg);
+
+        // Text does NOT pass through unconditionally: the resolver holds it to
+        // the AA floor. Pink Brand stores `#ffffff` on `#e91e63`, which is
+        // 4.20:1 — below AA — so it is legitimately rewritten, while the other
+        // two fixtures already clear AA and come back untouched.
+        //
+        // This assertion used to read `.toBe(fixture.colors.primaryText)` for
+        // every fixture, and passed only because the old wrong-direction search
+        // (NEH-898) walked toward WHITE from a foreground that was already
+        // white, ran straight into the clamp, and handed the failing colour
+        // back. The floor silently doing nothing was indistinguishable from the
+        // floor deciding nothing was needed — so the test pinned the defect in
+        // place, which is why it had to be inverted rather than deleted.
+        const text = cssVars["--hopper-box-primary-text"];
+        expect(text).toBeDefined();
+        const storedRatio = getContrastRatio(
+          fixture.colors.primaryText,
+          fixture.colors.primaryBg,
+        );
+        if (storedRatio >= AA_NORMAL_TEXT_RATIO) {
+          expect(text).toBe(fixture.colors.primaryText);
+        } else {
+          expect(text).not.toBe(fixture.colors.primaryText);
+          expect(getContrastRatio(text!, fixture.colors.primaryBg)).toBeGreaterThanOrEqual(
+            AA_NORMAL_TEXT_RATIO,
+          );
+        }
       },
     );
   });

@@ -5,7 +5,7 @@
  * @see https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
  */
 
-import type { ContrastResult, ContrastPairResult } from "./types";
+import type { ContrastResult, ContrastPairResult, RgbColor } from "./types";
 import { hexToRgb, rgbToHex, getLuminance } from "./color-math";
 
 /**
@@ -126,7 +126,72 @@ export function suggestContrastFix(
 }
 
 /**
- * Adjust a foreground color to achieve a target contrast ratio against a background.
+ * The relative luminance at which black and white are equally legible against a
+ * surface — solve `(L + 0.05) / 0.05 === 1.05 / (L + 0.05)` for L.
+ *
+ * ≈ **0.1791**, and it is the pivot `adjustForContrast` used to get wrong
+ * (NEH-898). Exported because two consumers had already re-derived the literal
+ * `0.179` by hand; a number this easy to mistype for `0.5` should have exactly
+ * one definition, and this package owns the arithmetic it comes from.
+ */
+export const CONTRAST_CROSSOVER_LUMINANCE = Math.sqrt(1.05 * 0.05) - 0.05;
+
+/** How far each channel moves per step of the search. */
+const ADJUST_STEP = 5;
+
+/**
+ * 52 steps of 5 spans the full 0–255 range, so both walks always terminate at
+ * their endpoint (`#000000` / `#ffffff`) rather than relying on the target
+ * being reachable at all.
+ */
+const ADJUST_MAX_STEPS = 52;
+
+function stepChannels(rgb: RgbColor, delta: number): RgbColor {
+  return {
+    r: Math.max(0, Math.min(255, rgb.r + delta)),
+    g: Math.max(0, Math.min(255, rgb.g + delta)),
+    b: Math.max(0, Math.min(255, rgb.b + delta)),
+  };
+}
+
+/**
+ * Adjust a foreground color to achieve a target contrast ratio against a
+ * background, and **never return a pairing worse than the one handed in**.
+ *
+ * ## The defect this replaces (NEH-898)
+ *
+ * The direction used to come from one test, `bgLuminance < 0.5`. The crossover
+ * where black and white are equally legible is at
+ * `CONTRAST_CROSSOVER_LUMINANCE` ≈ 0.179, not 0.5 — so for any surface in the
+ * band `0.179 ≤ L < 0.5` the search walked toward **white** when **black** was
+ * the direction that gains contrast, ran out of room, and returned `#ffffff`.
+ *
+ * That is not merely a failure to reach the target. Against Bright's real
+ * `buttonPrimary` background `#acb0b9` (L = 0.433), `#2b3038` starts at
+ * **6.11:1** and the old function answered `#ffffff` at **2.17:1** — a pairing
+ * already past AA "corrected" below AA, and the Theme Editor renders that
+ * answer under the words "Suggested fix for AAA compliance" with an Apply
+ * button next to it.
+ *
+ * ## The contract, stated deliberately
+ *
+ * A function asked to reach 7:1 that hands back 2.17:1 has failed whichever
+ * direction it walked, so the fix is not only the pivot:
+ *
+ * - **It searches BOTH directions** rather than predicting one, and returns the
+ *   first candidate to clear `targetRatio` — the smallest move that works, so
+ *   the author's hue survives where it can. Comparing the two directly also
+ *   means the crossover is never applied by hand, and cannot drift again.
+ * - **It never lowers contrast.** If neither direction reaches the target it
+ *   returns the highest-contrast candidate it saw, and if nothing beat the
+ *   colour handed in — a foreground already at `#000000` or `#ffffff` — it
+ *   returns that colour untouched. Returning something worse is the one answer
+ *   this function must never give, because every caller treats the result as an
+ *   improvement.
+ *
+ * A caller that needs "the most legible colour available" rather than "the
+ * nearest colour that clears the bar" should ask for a target it cannot reach
+ * (21), which now yields the endpoint honestly instead of by accident.
  */
 export function adjustForContrast(
   foreground: string,
@@ -140,51 +205,45 @@ export function adjustForContrast(
     return foreground;
   }
 
-  const bgLuminance = getLuminance(background);
-  let currentRatio = getContrastRatio(foreground, background);
-
-  if (currentRatio >= targetRatio) {
+  const startingRatio = getContrastRatio(foreground, background);
+  if (startingRatio >= targetRatio) {
     return foreground;
   }
 
-  const shouldLighten = bgLuminance < 0.5;
-  let adjustedRgb = { ...fgRgb };
-  const step = shouldLighten ? 5 : -5;
-  const maxIterations = 100;
+  let darker = fgRgb;
+  let lighter = fgRgb;
+  let best = foreground;
+  let bestRatio = startingRatio;
 
-  for (let i = 0; i < maxIterations; i++) {
-    adjustedRgb = {
-      r: Math.max(0, Math.min(255, adjustedRgb.r + step)),
-      g: Math.max(0, Math.min(255, adjustedRgb.g + step)),
-      b: Math.max(0, Math.min(255, adjustedRgb.b + step)),
-    };
+  for (let i = 0; i < ADJUST_MAX_STEPS; i++) {
+    darker = stepChannels(darker, -ADJUST_STEP);
+    lighter = stepChannels(lighter, ADJUST_STEP);
 
-    const newHex = rgbToHex(adjustedRgb);
-    currentRatio = getContrastRatio(newHex, background);
+    const candidates = [rgbToHex(darker), rgbToHex(lighter)].map((hex) => ({
+      hex,
+      ratio: getContrastRatio(hex, background),
+    }));
 
-    if (currentRatio >= targetRatio) {
-      return newHex;
+    // Both directions are examined on the same step, so whichever clears first
+    // is the smaller move. A step where both clear is settled by contrast.
+    const cleared = candidates
+      .filter((c) => c.ratio >= targetRatio)
+      .sort((a, b) => b.ratio - a.ratio)[0];
+    if (cleared) {
+      return cleared.hex;
     }
 
-    if (
-      shouldLighten &&
-      adjustedRgb.r >= 255 &&
-      adjustedRgb.g >= 255 &&
-      adjustedRgb.b >= 255
-    ) {
-      return "#ffffff";
-    }
-    if (
-      !shouldLighten &&
-      adjustedRgb.r <= 0 &&
-      adjustedRgb.g <= 0 &&
-      adjustedRgb.b <= 0
-    ) {
-      return "#000000";
+    for (const candidate of candidates) {
+      if (candidate.ratio > bestRatio) {
+        bestRatio = candidate.ratio;
+        best = candidate.hex;
+      }
     }
   }
 
-  return shouldLighten ? "#ffffff" : "#000000";
+  // Unreachable target: the most legible colour found, which is one of the two
+  // endpoints — or the original, when it was already an endpoint itself.
+  return best;
 }
 
 /**

@@ -10,6 +10,7 @@ import {
   findAAACompliantShade,
   suggestContrastFix,
   adjustForContrast,
+  CONTRAST_CROSSOVER_LUMINANCE,
   validateComponentTokenContrast,
   formatContrastRatio,
 } from "../contrast";
@@ -277,6 +278,87 @@ describe("contrast", () => {
       // Very low contrast pair where adjustment hits the limit
       const result = adjustForContrast("#fefefe", "#ffffff", 21);
       expect(["#000000", "#ffffff"]).toContain(result);
+    });
+
+    /**
+     * NEH-898. The direction used to come from `bgLuminance < 0.5`, but the
+     * black/white crossover is at ≈0.179 — so every surface in the band
+     * `0.179 ≤ L < 0.5` was walked the wrong way, to `#ffffff`.
+     *
+     * These assert in BOTH directions on purpose. A function that simply
+     * returned its input would satisfy "never makes it worse" and fail every
+     * "still adjusts what needs adjusting" case below it.
+     */
+    describe("search direction (NEH-898)", () => {
+      // Bright's real buttonPrimary background, L ≈ 0.433 — inside the band.
+      const MID_LIGHT_BG = "#acb0b9";
+
+      it("exposes the black/white crossover, which is ~0.179 and not 0.5", () => {
+        expect(CONTRAST_CROSSOVER_LUMINANCE).toBeCloseTo(0.1791, 4);
+        // The definition it comes from: black and white tie at that luminance.
+        const atCrossover = CONTRAST_CROSSOVER_LUMINANCE;
+        expect((atCrossover + 0.05) / 0.05).toBeCloseTo(1.05 / (atCrossover + 0.05), 6);
+      });
+
+      it("does not wreck a pairing that already clears AA (the reported case)", () => {
+        // Measured: 6.11:1 before. The old function answered #ffffff at 2.17:1
+        // and the Theme Editor offered that as the AAA fix.
+        const before = getContrastRatio("#2b3038", MID_LIGHT_BG);
+        expect(before).toBeCloseTo(6.11, 2);
+
+        const adjusted = adjustForContrast("#2b3038", MID_LIGHT_BG, 7);
+        expect(adjusted).not.toBe("#ffffff");
+        expect(getContrastRatio(adjusted, MID_LIGHT_BG)).toBeGreaterThanOrEqual(7);
+      });
+
+      it("reaches the target it was given on a mid-light surface", () => {
+        // The ticket's own repro: #9096a2 on #acb0b9 at 3:1.
+        const adjusted = adjustForContrast("#9096a2", MID_LIGHT_BG, 3);
+        expect(getContrastRatio(adjusted, MID_LIGHT_BG)).toBeGreaterThanOrEqual(3);
+      });
+
+      it("keeps the author's hue rather than collapsing to an endpoint", () => {
+        const adjusted = adjustForContrast("#9096a2", MID_LIGHT_BG, 3);
+        expect(["#000000", "#ffffff"]).not.toContain(adjusted);
+      });
+
+      it("never lowers contrast, at or above the crossover", () => {
+        // L just above 0.179 through to just below 0.5 — the whole failure band.
+        for (const bg of ["#747474", "#767676", "#959595", "#afafaf", "#bababa"]) {
+          for (const fg of ["#2b3038", "#333333", "#000000", "#1a1a1a"]) {
+            const before = getContrastRatio(fg, bg);
+            const after = getContrastRatio(adjustForContrast(fg, bg, 7), bg);
+            expect(after).toBeGreaterThanOrEqual(before - 1e-9);
+          }
+        }
+      });
+
+      it("returns the foreground untouched when nothing can improve on it", () => {
+        // Black on a mid-light surface is already the most legible colour
+        // available; 21:1 is unreachable, so there is nothing better to offer.
+        expect(adjustForContrast("#000000", MID_LIGHT_BG, 21)).toBe("#000000");
+      });
+
+      // --- the other direction: adjustment that SHOULD happen still happens ---
+
+      it("still lightens below the crossover", () => {
+        const bg = "#1a1a1a"; // L ≈ 0.010, below 0.179
+        const adjusted = adjustForContrast("#333333", bg, 7);
+        expect(getLuminance(adjusted)).toBeGreaterThan(getLuminance("#333333"));
+        expect(getContrastRatio(adjusted, bg)).toBeGreaterThanOrEqual(7);
+      });
+
+      it("still darkens above the crossover", () => {
+        const adjusted = adjustForContrast("#9096a2", "#ffffff", 7);
+        expect(getLuminance(adjusted)).toBeLessThan(getLuminance("#9096a2"));
+        expect(getContrastRatio(adjusted, "#ffffff")).toBeGreaterThanOrEqual(7);
+      });
+
+      it("moves a failing pair inside the band, rather than leaving it alone", () => {
+        const adjusted = adjustForContrast("#9096a2", MID_LIGHT_BG, 4.5);
+        expect(adjusted).not.toBe("#9096a2");
+        expect(getContrastRatio(adjusted, MID_LIGHT_BG)).toBeGreaterThanOrEqual(4.5);
+      });
     });
   });
 });
