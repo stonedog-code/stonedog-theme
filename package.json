@@ -46,7 +46,6 @@
     "test:coverage": "jest --coverage",
     "gate": "npm run type-check && npm run lint && npm run test",
     "publish:stonedog-theme": "bash scripts/publish-package.sh",
-    "publish": "npm run publish:stonedog-theme",
     "//release": "One memorable command per repo. It cannot be called `publish`: that is a reserved npm lifecycle name, so `npm publish` inside scripts/publish-package.sh would fire it and run the whole gate and publish a second time, hitting the already-published guard and reporting a successful release as a failure.",
     "release": "npm run publish:stonedog-theme",
     "version:bump:patch": "npm version patch --no-git-tag-version",
