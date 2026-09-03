@@ -141,8 +141,13 @@ export function readCatalogueTheme(dir: string, slug: string): JsonTheme {
   try {
     parsed = JSON.parse(readFileSync(path, "utf8"));
   } catch (error) {
+    // `cause` preserves the original stack and error type, which the message
+    // alone discards. A caller debugging a malformed catalogue file gets the
+    // JSON parser's own position information rather than just our sentence
+    // about it. Flagged by eslint 10's preserve-caught-error.
     throw new Error(
       `[@stonedogcode/theme] could not read ${path}: ${(error as Error).message}`,
+      { cause: error },
     );
   }
 
@@ -250,7 +255,10 @@ export function writeCatalogueTheme(
 
   const next = JSON.stringify(theme, null, 2) + "\n";
 
-  let current: string | null = null;
+  // No initialiser: both paths below assign, so TypeScript proves what
+  // `= null` only implied. eslint 10's no-useless-assignment flagged it as
+  // dead, and it was — the catch sets the absent case explicitly.
+  let current: string | null;
   try {
     current = readFileSync(path, "utf8");
   } catch {

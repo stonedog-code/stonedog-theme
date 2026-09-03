@@ -8,14 +8,14 @@
     "type": "git",
     "url": "git+https://github.com/stonedog-code/stonedog-theme.git"
   },
-  "//publishConfig": "A SCOPED package defaults to access: restricted. Publishing one without this succeeds, prints nothing unusual, and then 404s for every consumer — which reads as a missing package rather than as a private one. It was not needed while the name was unscoped (those default to public), so it is new here and it is the single thing most likely to be forgotten in a scope migration.",
+  "//publishConfig": "A SCOPED package defaults to access: restricted. Publishing one without this succeeds, prints nothing unusual, and then 404s for every consumer \u2014 which reads as a missing package rather than as a private one. It was not needed while the name was unscoped (those default to public), so it is new here and it is the single thing most likely to be forgotten in a scope migration.",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
   "sideEffects": false,
-  "//dependencies": "ZERO runtime dependencies, and that is load-bearing. This package resolves colours and computes contrast ratios — arithmetic over plain objects. Every dependency added here is imposed on a public Apache-2.0 consumer, a proprietary SaaS, and an AGPLv3 one simultaneously. The private hopper-logger import this was extracted with is now the injectable seam in src/logger.ts.",
-  "//exports": "Unlike stonedog-style this ships a BUILT dist/, not source. Panda never parses it — it emits no CSS and defines no components, it produces a Record<string, string> of custom properties at runtime. So the reason stonedog-style ships source does not apply here.",
+  "//dependencies": "ZERO runtime dependencies, and that is load-bearing. This package resolves colours and computes contrast ratios \u2014 arithmetic over plain objects. Every dependency added here is imposed on a public Apache-2.0 consumer, a proprietary SaaS, and an AGPLv3 one simultaneously. The private hopper-logger import this was extracted with is now the injectable seam in src/logger.ts.",
+  "//exports": "Unlike stonedog-style this ships a BUILT dist/, not source. Panda never parses it \u2014 it emits no CSS and defines no components, it produces a Record<string, string> of custom properties at runtime. So the reason stonedog-style ships source does not apply here.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -41,7 +41,7 @@
   "scripts": {
     "build": "tsup",
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --ext ts",
+    "lint": "eslint .",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "gate": "npm run type-check && npm run lint && npm run test",
@@ -56,11 +56,12 @@
     "@types/node": "^24.13.2",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.57.1",
+    "eslint": "^10.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.4.11",
     "tsup": "^8.3.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@eslint/js": "^10.0.0"
   },
   "engines": {
     "node": ">=20"
