@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "project": "stonedog-theme",
+  "//dirname": "The unit directory is src/__test__ — SINGULAR. Every other repo in this fleet uses __tests__, so a glob copied from one of them matches nothing here and reports zero unit tests for a repo that has eleven.",
+  "tiers": {
+    "unit": {
+      "include": ["src/__test__/**/*.test.ts"]
+    },
+    "integration": {
+      "include": ["test/integration/**/*.test.ts"]
+    }
+  }
+}
